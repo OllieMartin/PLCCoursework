@@ -22,16 +22,6 @@ import Tokens
     num { TokenNum _ $$ }
 
 %% 
-Exp : let var '=' Exp in Exp { Let $2 $4 $6 } 
-    | Exp '+' Exp            { Plus $1 $3 } 
-    | Exp '-' Exp            { Minus $1 $3 } 
-    | Exp '*' Exp            { Times $1 $3 } 
-    | Exp '/' Exp            { Div $1 $3 } 
-    | '(' Exp ')'            { $2 } 
-    | '-' Exp %prec NEG      { Negate $2 } 
-    | var                    { Var $1 } 
-    | num                    { Num $1 }
-
 Prog : StrictVarList '{' ConstraintList '}'  {Query $1 $3}
 | Prog Prog {ProgLink $1 $2}
 
