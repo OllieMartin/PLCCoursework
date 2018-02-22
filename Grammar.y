@@ -16,6 +16,10 @@ import Tokens
     '}' { TokenCloseBrace _ }
     ',' { TokenComma _ }
     ';' { TokenSemiColon _ }
+    '_' { TokenUnderscore _ }
+    '[' { TokenOpenSqr _ }
+    ']' { TokenCloseSqr _ }
+    num { TokenNum _ $$ }
 
 %% 
 Exp : let var '=' Exp in Exp { Let $2 $4 $6 } 
@@ -25,19 +29,15 @@ Exp : let var '=' Exp in Exp { Let $2 $4 $6 }
     | Exp '/' Exp            { Div $1 $3 } 
     | '(' Exp ')'            { $2 } 
     | '-' Exp %prec NEG      { Negate $2 } 
-    | int                    { Int $1 } 
     | var                    { Var $1 } 
+    | num                    { Num $1 }
+    | rel 
     
 { 
 parseError :: [Token] -> a
 parseError _ = error "Parse error" 
-data Exp = Let String Exp Exp 
-         | Plus Exp Exp 
-         | Minus Exp Exp 
-         | Times Exp Exp 
-         | Div Exp Exp 
-         | Negate Exp
-         | Int Int 
+data Prog = Num Int 
          | Var String 
+         | 
          deriving Show 
 } 
