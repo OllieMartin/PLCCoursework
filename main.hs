@@ -1,3 +1,4 @@
 import Tokens
+import Grammar
 main = do text <- readFile "program.txt"
-          putStrLn (show (alexScanTokens text))
+          putStrLn (show (parseCalc (alexScanTokens text)))

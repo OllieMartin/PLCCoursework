@@ -23,10 +23,10 @@ import Tokens
 
 %% 
 Prog : StrictVarList '{' ConstraintList '}'  {Query $1 $3}
-| Prog Prog {ProgLink $1 $2}
+| StrictVarList '{' ConstraintList '}' Prog {ProgLink (Query $1 $3) $5}
 
 VarList : VarItem {VarListSingleton $1}
-| VarItem ',' VarList {VarListLink $1 $2}
+| VarItem ',' VarList {VarListLink $1 $3}
 
 StrictVarList : var {StrictVarListSingleton $1}
 | var ',' StrictVarList {StrictVarListLink $1 $3}
@@ -76,4 +76,5 @@ data Constraint = ConstraintRel String VarList
 
 data NumList = NumListSingleton Int
   | NumListLink Int NumList
+  deriving Show
 } 
