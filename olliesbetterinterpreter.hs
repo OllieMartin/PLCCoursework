@@ -7,18 +7,13 @@ import Data.List.Split
 --type Relation = (String,[VarItem],[[String]])
 
 evalConstraintRel :: Constraint -> IO Relation
-evalConstraintRel (ConstraintRel rn vs) = parseCSV rn vs
-evalConstraintRel (ConstraintRelEnhanced rn cs vs) = []
+evalConstraintRel (ConstraintRel rn vs) = parseCSV rn vs [0..(length vs)-1]
+evalConstraintRel (ConstraintRelEnhanced rn cs vs) = parseCSV rn vs cs
 
-parseCSV :: String -> [VarItem] -> IO Relation
-parseCSV relName vs = do r <- result
-                         return ( map (parseCSVLine vs) r )
-                where result = readCSV relName
-
-parseCSVEnhanced :: String -> [VarItem] -> [Int] -> IO Relation
-parseCSV relName vs = do r <- result
-                         return ( map (parseCSVLine vs) r )
-                where result = readCSVEnhanced relName
+parseCSV :: String -> [VarItem] -> [Int] -> IO Relation
+parseCSV relName vs cs = do r <- result
+                            return ( map (parseCSVLine vs) r )
+                where result = readCSV relName cs
 
 -- Line -> VarName -> Assignment
 parseCSVLine :: [VarItem] -> [String] -> Assignment
@@ -32,10 +27,9 @@ isNotBlank (_,_) = True
 varItemToString :: (VarItem,String) -> (String,String)
 varItemToString ((VarItemVar v),x) = (v,x)
 
-
-readCSV :: String -> IO [[String]]
-readCSV relName = do result <- readFile ( relName ++ ".csv" )
-                     return ( map (splitOn ",") (lines result) )
+readCSV :: String -> [Int] -> IO [[String]]
+readCSV relName cs = do result <- readFile ( relName ++ ".csv" )
+                        return [ (map (splitOn ",") (lines result)) !! n | n <- cs ]
 
 type Assignment = [(String, String)]
 type Relation = [Assignment]
