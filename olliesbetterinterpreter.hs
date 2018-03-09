@@ -1,10 +1,27 @@
+module Interpreter2 where
+
 import Tokens
 import Grammar
 
 import System.Environment
 import Data.List.Split
+import Control.Monad
+import Data.List
 
---type Relation = (String,[VarItem],[[String]])
+eval :: Prog -> IO String
+eval (ProgLink p1 p2) = do a <- (eval p1)
+                           b <- (eval p2)
+                           return (a ++ b)
+eval (Query svl cl) = query svl cl
+
+query :: [String] -> [Constraint] -> IO String
+query vs cs = do (r:rs) <- getRelations cs
+                 r2 <- (let r1 = (foldl (relJoin) r rs) in applyEqs r1 es)
+                 return (printRel vs r2)
+              where es = filter (isConstraintEq) cs
+
+getRelations :: [Constraint] -> IO [Relation]
+getRelations cs = mapM (evalConstraintRel) ( (filter (isConstraintRel) cs) ++ (filter (isConstraintRelEnhanced) cs))
 
 evalConstraintRel :: Constraint -> IO Relation
 evalConstraintRel (ConstraintRel rn vs) = parseCSV rn vs [0..(length vs)-1]
@@ -30,6 +47,46 @@ varItemToString ((VarItemVar v),x) = (v,x)
 readCSV :: String -> [Int] -> IO [[String]]
 readCSV relName cs = do result <- readFile ( relName ++ ".csv" )
                         return [ (map (splitOn ",") (lines result)) !! n | n <- cs ]
+
+
+
+isConstraintRel :: Constraint -> Bool
+isConstraintRel (ConstraintRel _ _) = True
+isConstraintRel _ = False
+
+isConstraintRelEnhanced :: Constraint -> Bool
+isConstraintRelEnhanced (ConstraintRelEnhanced _ _ _) = True
+isConstraintRelEnhanced _ = False
+
+isConstraintEq :: Constraint -> Bool
+isConstraintEq (ConstraintEq _ _) = True
+isConstraintEq _ = False
+
+
+
+applyEqs :: Relation -> [Constraint] -> IO Relation
+applyEqs r (c:cs) = do result <- applyEqs (filter (satisfiesEq c) r) cs
+                       return result;
+applyEqs r [] = return r
+
+satisfiesEq :: Constraint -> Assignment -> Bool
+satisfiesEq (ConstraintEq v1 v2) ps = getVal ps v1 == getVal ps v2
+satisfiesEq _ ps = True
+
+-- Gets value of a specific variable from an assignment
+getVal :: Assignment -> String -> String
+getVal ps v = snd (head (filter (matchesV) ps))
+  where
+    matchesV (v',val) = v == v'
+
+-- Creates a string of an entire relation according to printRelLine
+printRel :: [String] -> Relation -> String
+printRel vs r = (concat (sort (map (printRelLine vs) r)))
+
+-- Creates a string of one line of a relation in the order of [String] i.e. ["x3","x2"] (filtering out any cols not required)
+printRelLine :: [String] -> Assignment -> String
+printRelLine [v] a = (getVal a v) ++ "\n"
+printRelLine (v:vs) a = (getVal a v) ++ "," ++ printRelLine vs a
 
 type Assignment = [(String, String)]
 type Relation = [Assignment]

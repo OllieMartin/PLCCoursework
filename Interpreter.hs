@@ -5,22 +5,43 @@ import System.Environment
 
 --type Relation = (String,[VarItem],[[String]])
 
-eval :: Prog -> String
+eval :: Prog -> IO String
 eval (ProgLink p1 p2) = (eval p1) ++ (eval p2)
 eval (Query svl cl) = query svl cl
 
-query :: [String] -> [Constraint] -> String
+query :: [String] -> [Constraint] -> IO String
 query vs cs = printRel vs (applyEqs (foldl (relJoin) r rs) es)
   where
     (r:rs) = getRelations cs
     es = filter (isConstraintEq) cs
 
-getRelations :: [Constraint] -> [Relation]
+getRelations :: [Constraint] -> IO [Relation]
 getRelations cs = map (evalConstraintRel) (filter (isConstraintRel) cs ++ filter (isConstraintRelEnhanced) cs)
 
-evalConstraintRel :: Constraint -> Relation
-evalConstraintRel (ConstraintRel rn vs) = [] --TODO
-evalConstraintRel (ConstraintRelEnhanced rn cs vs) = []
+evalConstraintRel :: Constraint -> IO Relation
+evalConstraintRel (ConstraintRel rn vs) = parseCSV rn vs [0..(length vs)-1]
+evalConstraintRel (ConstraintRelEnhanced rn cs vs) = parseCSV rn vs cs
+
+parseCSV :: String -> [VarItem] -> [Int] -> IO Relation
+parseCSV relName vs cs = do r <- result
+                            return ( map (parseCSVLine vs) r )
+                where result = readCSV relName cs
+
+-- Line -> VarName -> Assignment
+parseCSVLine :: [VarItem] -> [String] -> Assignment
+parseCSVLine vs xs = map varItemToString (filter isNotBlank ys)
+              where ys = zip vs xs
+
+isNotBlank :: (VarItem,String) -> Bool
+isNotBlank ((VarItemBlank),_) = False
+isNotBlank (_,_) = True
+
+varItemToString :: (VarItem,String) -> (String,String)
+varItemToString ((VarItemVar v),x) = (v,x)
+
+readCSV :: String -> [Int] -> IO [[String]]
+readCSV relName cs = do result <- readFile ( relName ++ ".csv" )
+                        return [ (map (splitOn ",") (lines result)) !! n | n <- cs ]
 
 isConstraintRel :: Constraint -> Bool
 isConstraintRel (ConstraintRel _ _) = True
@@ -56,11 +77,6 @@ printRel vs r = concat (sort (map (printRelLine vs) r))
 printRelLine :: [String] -> Assignment -> String
 printRelLine [v] a = getVal v ++ "\n"
 printRelLine (v:vs) a = getVal v ++ "," ++ printRelLine vs a
---parseCSV :: [[String]] -> String -> [VarItem] -> Relation
---parseCSV xss rel cols =
-
-readCSV :: String -> IO String
-readCSV relName = readFile ( relName ++ ".csv" )
 
 type Assignment = [(String, String)]
 type Relation = [Assignment]

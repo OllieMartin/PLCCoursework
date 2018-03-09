@@ -1,4 +1,9 @@
+module Main where
+
 import Tokens
 import Grammar
+import Interpreter2
+
 main = do text <- readFile "program.txt"
-          putStrLn (show (parseCalc (alexScanTokens text)))
+          result <- (eval (parseCalc (alexScanTokens text)))
+          putStrLn result
