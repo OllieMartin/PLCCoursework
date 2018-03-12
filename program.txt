@@ -1,4 +1,30 @@
-x3,x2 {
-	A(x1,x2);
-	B(x3,x1);
-}
+firstname,
+
+
+
+module 
+
+{ 
+	A //weird...
+[0,
+
+
+
+1]
+	(id1,firstname,aNDTHISDOESNTMATTEREITHERPROBABLY); 
+
+// Comments!
+	B
+
+(                                id2
+
+
+,module)                    ;
+	
+
+id1=
+
+
+id2;
+} //COMMENT!
+// surname { A[0,1,2](id,firstname,surname); B(id,module);}
