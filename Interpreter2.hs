@@ -4,9 +4,15 @@ import Tokens
 import MonadicGrammar
 
 import System.Environment
-import Data.List.Split
 import Control.Monad
 import Data.List
+
+splitOn :: Eq a => a -> [a] -> [[a]]
+splitOn x xs | leftOver == [] = [taken]
+             | otherwise = taken : splitOn x (tail leftOver)
+  where
+    taken = takeWhile (/= x) xs
+    leftOver = dropWhile (/= x) xs
 
 eval :: Prog -> IO String
 eval (ProgLink p1 p2) = do a <- (eval p1)
@@ -46,7 +52,7 @@ varItemToString ((VarItemVar v),x) = (v,x)
 
 readCSV :: String -> [Int] -> IO [[String]]
 readCSV relName cs = do result <- readFile ( relName ++ ".csv" )
-                        return [ [ record !! n | n <- cs ] | record <- (map (splitOn ",") (lines result))]
+                        return [ [ record !! n | n <- cs ] | record <- (map (splitOn ',') (lines result))]
                        -- return [ (map (splitOn ",") (lines result)) !! n | n <- cs ]
 
 
