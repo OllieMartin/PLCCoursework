@@ -322,10 +322,27 @@ parseCalc tks = happySomeParser where
 happySeq = happyDontSeq
 
 
-parseError :: [Token] -> E a
-parseError _ = failE "Parse Error"
-
 data E a = Ok a | Failed String
+
+parseError :: [Token] -> E a
+parseError ((TokenOpenBrace p):ts) = failE (prettyPrint "" "{" p)
+parseError ((TokenCloseBrace p):ts) = failE (prettyPrint "" "}" p)
+parseError ((TokenOpenSqr p):ts) = failE (prettyPrint "" "[" p)
+parseError ((TokenCloseSqr p):ts) = failE (prettyPrint "" "]" p)
+parseError ((TokenVar p id):ts) = failE (prettyPrint "variable " id p)
+parseError ((TokenRel p id):ts) = failE (prettyPrint "relation " id p)
+parseError ((TokenEq p):ts) = failE (prettyPrint "" "=" p)
+parseError ((TokenLParen p):ts) = failE (prettyPrint "" "(" p)
+parseError ((TokenRParen p):ts) = failE (prettyPrint "" ")" p)
+parseError ((TokenSemiColon p):ts) = failE (prettyPrint "" ";" p)
+parseError ((TokenNum p n):ts) = failE (prettyPrint "relation index " (show n) p)
+parseError ((TokenUnderscore p):ts) = failE (prettyPrint "" "_" p)
+parseError ((TokenComma p):ts) = failE (prettyPrint "" "," p)
+parseError t = failE "Parse Error"
+
+prettyPrint :: String -> String -> AlexPosn -> String
+prettyPrint cat s (AlexPn _ l c) = "Parse Error - Line " ++ (show l) ++ ", Column " ++ (show c) ++ " - Near " ++ cat ++ "'" ++ s ++ "'"
+
 
 thenE :: E a -> (a -> E b) -> E b
 m `thenE` k = 

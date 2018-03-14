@@ -5,5 +5,9 @@ import MonadicGrammar
 import Interpreter2
 
 main = do text <- readFile "challenge.eql"
-          result <- (eval (parseCalc (alexScanTokens text)))
+          result <- (errorHandle (parseCalc (alexScanTokens text)))
           putStrLn result
+
+errorHandle :: E Prog -> IO String
+errorHandle (Ok t) = eval t
+errorHandle (Failed s) = return s
