@@ -1,7 +1,7 @@
 module Interpreter2 where
 
 import Tokens
-import Grammar
+import MonadicGrammar
 
 import System.Environment
 import Control.Monad
