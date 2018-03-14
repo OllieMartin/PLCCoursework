@@ -1,7 +1,7 @@
 module Main where
 
 import Tokens
-import Grammar
+import MonadicGrammar
 import Interpreter2
 
 main = do text <- readFile "program.txt"
