@@ -1,4 +1,4 @@
-myinterpreter: Parser.hs Interpreter.hs Lexer.hs Main.hs
+myinterpreter: Parser.hs Interpreter.hs Lexer.hs
 	ghc -o myinterpreter Main.hs
 
 Parser.hs: Grammar.y
