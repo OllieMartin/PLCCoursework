@@ -2,7 +2,7 @@ module Main where
 
 import Tokens
 import MonadicGrammar
-import Interpreter2
+import Interpreter3
 
 main = do text <- readFile "challenge.eql"
           result <- (errorHandle (parseCalc (alexScanTokens text)))
