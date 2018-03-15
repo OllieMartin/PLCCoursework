@@ -360,7 +360,7 @@ catchE :: E a -> (String -> E a) -> E a
 catchE m k = 
    case m of
       Ok a -> Ok a
-      Failed e -> k e
+      Failed e -> error e
   
 data Prog = Query [String] [Constraint]
          | ProgLink Prog Prog

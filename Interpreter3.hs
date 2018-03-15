@@ -1,4 +1,4 @@
-module Interpreter2 where
+module Interpreter3 where
 
 import Tokens
 import MonadicGrammar
@@ -6,6 +6,7 @@ import MonadicGrammar
 import System.Environment
 import Control.Monad
 import Data.List
+import System.Directory
 
 splitOn :: Eq a => a -> [a] -> [[a]]
 splitOn x xs | leftOver == [] = [taken]
@@ -51,9 +52,13 @@ varItemToString :: (VarItem,String) -> (String,String)
 varItemToString ((VarItemVar v),x) = (v,x)
 
 readCSV :: String -> [Int] -> IO [[String]]
-readCSV relName cs = do result <-readFile ( relName ++ ".csv" )
+readCSV relName cs = do b <- doesFileExist filename
+                        readCSV' b
+  where
+    filename = relName ++ ".csv"
+    readCSV' b | b = do result <- readFile filename
                         return [ [ record !! n | n <- cs ] | record <- (map (splitOn ',') (lines result))]
-                       -- return [ (map (splitOn ",") (lines result)) !! n | n <- cs ]
+               | otherwise = errorWithoutStackTrace ("Relation " ++ relName ++ " does not have matching file: " ++ filename)
 
 isConstraintRel :: Constraint -> Bool
 isConstraintRel (ConstraintRel _ _) = True
@@ -80,9 +85,11 @@ satisfiesEq _ ps = True
 
 -- Gets value of a specific variable from an assignment
 getVal :: Assignment -> String -> String
-getVal ps v = snd (head (filter (matchesV) ps))
+getVal ps v | fs /= [] = snd (head fs)
+            | otherwise = errorWithoutStackTrace ("Variable unconstrained: " ++ v)
   where
     matchesV (v',val) = v == v'
+    fs = filter (matchesV) ps
 
 -- Creates a string of an entire relation according to printRelLine
 printRel :: [String] -> Relation -> String
