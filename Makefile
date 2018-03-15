@@ -1,8 +1,8 @@
-myinterpreter: Grammar.hs Interpreter2.hs Tokens.hs
-	ghc -o myinterpreter main.hs
+myinterpreter: Parser.hs Interpreter.hs Lexer.hs Main.hs
+	ghc -o myinterpreter Main.hs
 
-Grammar.hs: Grammar.y
-	happy -o Grammar.hs Grammar.y
+Parser.hs: Grammar.y
+	happy -o Parser.hs Grammar.y
 
-Tokens.hs: Tokens.x
-	alex -o Tokens.hs Tokens.x
+Lexer.hs: Tokens.x
+	alex -o Lexer.hs Tokens.x
