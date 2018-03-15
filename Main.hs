@@ -1,8 +1,8 @@
 module Main where
 
-import Tokens
-import MonadicGrammar
-import Interpreter3
+import Lexer
+import Parser
+import Interpreter
 import System.Environment
 import System.Directory
 
