@@ -58,7 +58,7 @@ readCSV relName cs = do b <- doesFileExist filename
     filename = relName ++ ".csv"
     readCSV' b | b = do result <- readFile filename
                         return [ [ record !! n | n <- cs ] | record <- (map (splitOn ',') (lines result))]
-               | otherwise = errorWithoutStackTrace ("Relation " ++ relName ++ " does not have matching file: " ++ filename)
+               | otherwise = error ("Relation " ++ relName ++ " does not have matching file: " ++ filename)
 
 isConstraintRel :: Constraint -> Bool
 isConstraintRel (ConstraintRel _ _) = True
@@ -86,7 +86,7 @@ satisfiesEq _ ps = True
 -- Gets value of a specific variable from an assignment
 getVal :: Assignment -> String -> String
 getVal ps v | fs /= [] = snd (head fs)
-            | otherwise = errorWithoutStackTrace ("Variable unconstrained: " ++ v)
+            | otherwise = error ("Variable unconstrained: " ++ v)
   where
     matchesV (v',val) = v == v'
     fs = filter (matchesV) ps
