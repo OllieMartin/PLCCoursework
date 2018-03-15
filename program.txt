@@ -1,4 +1,0 @@
-id,module {{
-	A(id,_);
-	B(id,module);
-}
