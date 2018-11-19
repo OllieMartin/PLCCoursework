@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -w #-}
-module Parser where 
-import Lexer
+module Grammar where 
+import Tokens
 import qualified Data.Array as Happy_Data_Array
 import qualified Data.Bits as Bits
 import Control.Applicative(Applicative(..))
@@ -325,60 +325,37 @@ happyNewToken action sts stk (tk:tks) =
 happyError_ explist 24 tk tks = happyError' (tks, explist)
 happyError_ explist _ tk tks = happyError' ((tk:tks), explist)
 
-happyThen :: () => E a -> (a -> E b) -> E b
-happyThen = (thenE)
-happyReturn :: () => a -> E a
-happyReturn = (returnE)
-happyThen1 m k tks = (thenE) m (\a -> k a tks)
-happyReturn1 :: () => a -> b -> E a
-happyReturn1 = \a tks -> (returnE) a
-happyError' :: () => ([(Token)], [String]) -> E a
-happyError' = (\(tokens, _) -> parseError tokens)
-parseCalc tks = happySomeParser where
+newtype HappyIdentity a = HappyIdentity a
+happyIdentity = HappyIdentity
+happyRunIdentity (HappyIdentity a) = a
+
+instance Functor HappyIdentity where
+    fmap f (HappyIdentity a) = HappyIdentity (f a)
+
+instance Applicative HappyIdentity where
+    pure  = HappyIdentity
+    (<*>) = ap
+instance Monad HappyIdentity where
+    return = pure
+    (HappyIdentity p) >>= q = q p
+
+happyThen :: () => HappyIdentity a -> (a -> HappyIdentity b) -> HappyIdentity b
+happyThen = (>>=)
+happyReturn :: () => a -> HappyIdentity a
+happyReturn = (return)
+happyThen1 m k tks = (>>=) m (\a -> k a tks)
+happyReturn1 :: () => a -> b -> HappyIdentity a
+happyReturn1 = \a tks -> (return) a
+happyError' :: () => ([(Token)], [String]) -> HappyIdentity a
+happyError' = HappyIdentity . (\(tokens, _) -> parseError tokens)
+parseCalc tks = happyRunIdentity happySomeParser where
  happySomeParser = happyThen (happyParse action_0 tks) (\x -> case x of {HappyAbsSyn4 z -> happyReturn z; _other -> notHappyAtAll })
 
 happySeq = happyDontSeq
 
 
-data E a = Ok a | Failed String
-
-parseError :: [Token] -> E a
-parseError ((TokenOpenBrace p):ts) = failE (prettyPrint "" "{" p)
-parseError ((TokenCloseBrace p):ts) = failE (prettyPrint "" "}" p)
-parseError ((TokenOpenSqr p):ts) = failE (prettyPrint "" "[" p)
-parseError ((TokenCloseSqr p):ts) = failE (prettyPrint "" "]" p)
-parseError ((TokenVar p id):ts) = failE (prettyPrint "variable " id p)
-parseError ((TokenRel p id):ts) = failE (prettyPrint "relation " id p)
-parseError ((TokenEq p):ts) = failE (prettyPrint "" "=" p)
-parseError ((TokenLParen p):ts) = failE (prettyPrint "" "(" p)
-parseError ((TokenRParen p):ts) = failE (prettyPrint "" ")" p)
-parseError ((TokenSemiColon p):ts) = failE (prettyPrint "" ";" p)
-parseError ((TokenNum p n):ts) = failE (prettyPrint "relation index " (show n) p)
-parseError ((TokenUnderscore p):ts) = failE (prettyPrint "" "_" p)
-parseError ((TokenComma p):ts) = failE (prettyPrint "" "," p)
-parseError t = failE "Parse Error"
-
-prettyPrint :: String -> String -> AlexPosn -> String
-prettyPrint cat s (AlexPn _ l c) = "Parse Error - Line " ++ (show l) ++ ", Column " ++ (show c) ++ " - Near " ++ cat ++ "'" ++ s ++ "'"
-
-
-thenE :: E a -> (a -> E b) -> E b
-m `thenE` k = 
-   case m of 
-       Ok a -> k a
-       Failed e -> Failed e
-
-returnE :: a -> E a
-returnE a = Ok a
-
-failE :: String -> E a
-failE err = Failed err
-
-catchE :: E a -> (String -> E a) -> E a
-catchE m k = 
-   case m of
-      Ok a -> Ok a
-      Failed e -> k e
+parseError :: [Token] -> a
+parseError _ = error "Parse error"
   
 data Prog = Query [String] [Constraint]
          | ProgLink Prog Prog
